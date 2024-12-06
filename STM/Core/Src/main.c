@@ -22,7 +22,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "global.h"
+//#include "global.h"
+#include "fsm.h"
+#include "software_timer.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,10 +71,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart)
 {
 	if( huart->Instance == USART2 )
 	{
-		current_index_buffer = next_index_buffer;
-		buffer[next_index_buffer++] = temp;
+		previous_index_buffer = index_buffer;
+		buffer[index_buffer++] = temp;
 
-		if(next_index_buffer >= MAX_BUFFER_SIZE) next_index_buffer = 0;
+		if(index_buffer >= MAX_BUFFER_SIZE) index_buffer = 0;
 		buffer_flag = 1;
 
 		HAL_UART_Receive_IT(&huart2, &temp, sizeof(temp));
@@ -111,14 +114,15 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADC_Start(&hadc1);
   HAL_UART_Receive_IT (& huart2 , &temp , sizeof(temp)) ;
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  setTimer(300, 0);
-
+  uart_fsm_init();
+  setTimer(100, 0);
   char str[50];
 
   while (1)
@@ -129,15 +133,14 @@ int main(void)
 	  }
 
 	  if(timerFlag[0]){
-		  setTimer(300, 0);
+		  setTimer(100, 0);
 		  //HAL_UART_Transmit(&huart2, TX, sizeof(TX), 500);
 		  if(isReadADC_flag == 1){
-			  HAL_UART_Transmit(&huart2, TX, sizeof(TX), 500);
 			  ADC_VALUE = HAL_ADC_GetValue(&hadc1);
 			  isReadADC_flag = 0;
 		  }
 		  if(isSendADC_flag == 1){
-			  HAL_UART_Transmit(&huart2, str, sprintf(str, "!ADC:%ld#", ADC_VALUE), 1000);
+			  HAL_UART_Transmit(&huart2, str, sprintf(str, "\r\n!ADC:%ld#", ADC_VALUE), 1000);
 		  }
 	  }
 
