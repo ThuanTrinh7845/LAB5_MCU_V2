@@ -7,8 +7,8 @@
 
 #include "global.h"
 
-int command_state = 0;
-int communication_state = 0;
+int command_state = CDM_INT;
+int communication_state = UART_INIT;
 
 uint8_t buffer[MAX_BUFFER_SIZE];
 uint8_t current_index_buffer = 0;
